@@ -35,6 +35,66 @@ A bank needs a database to administer the information about its customers, their
 - The loans granted.
 - How financial behavior relates to district demographics.
 
-## Repository contents
+## Project structure
 
-The repository is currently empty apart from this file. The conceptual model, attribute characterization and implementation scripts will be added as the project progresses.
+```
+berka_data_base/
+├── config/
+│   ├── config.example.toml   # template with every setting (committed)
+│   └── config.toml           # your local copy with the password (ignored by git)
+├── data/
+│   └── berka.sql.gz          # original dataset (compressed)
+├── docs/
+│   ├── Diccionario_de_datos.docx
+│   └── sql_Entrega2_documentado.mwb
+├── notebooks/
+│   └── Tercera_Entrega_Berka.ipynb   # step-by-step report of the third delivery
+├── sql/
+│   └── berka_objects.sql     # routines over the raw schema (Workbench / mysql console)
+└── src/berka_bank/
+    ├── main.py               # orchestrator: `uv run berka`
+    ├── config.py             # reads config/config.toml
+    ├── db.py                 # connection, execute/query, MySQL error messages
+    ├── staging.py            # 1. load berka.sql into `berka`
+    ├── schema.py             # 2. physical model `banco_berka` (DDL)
+    ├── migration.py          # 3. staging -> model + validation against the dictionary
+    ├── routines.py           # 4. fn_saldo_cuenta, sp_extracto_cuenta, triggers
+    └── ui/                   # ipywidgets interface (Spanish), served with Voilà
+```
+
+## Getting started
+
+Requirements: MySQL 8.0.16+ running, and [uv](https://docs.astral.sh/uv/).
+
+```bash
+git clone https://github.com/jpcastanom/berka_data_base.git
+cd berka_data_base
+uv sync                                           # creates .venv and installs everything
+cp config/config.example.toml config/config.toml  # then edit user/password
+uv run berka
+```
+
+`uv run berka` runs the whole pipeline and then opens the interface at <http://localhost:8866>:
+
+1. **Staging**: loads `data/berka.sql.gz` into the `berka` database (1-3 min, only the first time).
+2. **Model**: creates `banco_berka` and migrates the data (about 1 min, only if it does not exist yet).
+3. **Routines**: recreates the function, the procedure and both triggers.
+4. **Interface**: serves the app (tabs Clientes, Transacciones, Extracto, Saldo, Auditoría).
+
+Later runs skip steps 1 and 2, so the changes made from the interface are kept.
+
+| Command | What it does |
+|---|---|
+| `uv run berka` | prepare what is missing and open the interface |
+| `uv run berka --rebuild` | drop and rebuild `banco_berka` from staging |
+| `uv run berka --reload-staging` | load `berka.sql` again |
+| `uv run berka --setup-only` | prepare the database without opening the interface |
+| `uv run berka --port 9000 --no-browser` | change port / do not open the browser |
+
+If `password` is empty in `config.toml`, it is read from the `MYSQL_PASSWORD` environment variable, or asked once at startup.
+
+To open the report notebook: `uv run jupyter lab notebooks/Tercera_Entrega_Berka.ipynb`. It reads the same `config/config.toml`.
+
+### Running from VS Code
+
+Use the **Run and Debug** panel (F5) and pick *Berka: preparar BD y abrir interfaz*. Do not use the "Run Python File" button: with spaces or accents in the folder path it wraps the path in extra quotes and Python cannot find the file. From a terminal, always use `uv run berka` at the project root.

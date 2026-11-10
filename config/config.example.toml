@@ -1,0 +1,27 @@
+# Berka project settings.
+# Copy this file to config/config.toml and edit it. config.toml is ignored by git,
+# so your password never ends up in the repository.
+
+[mysql]
+host = "localhost"
+port = 3306
+user = "root"
+# Leave empty to read it from the MYSQL_PASSWORD environment variable,
+# or to be asked for it once when the program starts.
+password = ""
+
+[databases]
+staging = "berka"       # raw dataset created by berka.sql
+model = "banco_berka"   # physical model of the third delivery
+
+[data]
+# Relative paths are resolved from the project root. Plain .sql or .sql.gz both work.
+berka_sql = "data/berka.sql.gz"
+
+[pipeline]
+reload_staging = false  # true = load berka.sql again even if the staging DB is complete
+rebuild_model = false   # true = drop and rebuild banco_berka (loses changes made from the UI)
+
+[ui]
+port = 8866
+open_browser = true

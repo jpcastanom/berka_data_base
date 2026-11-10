@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Berka: preparar BD y abrir interfaz",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "berka_bank",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Berka: solo preparar BD",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "berka_bank",
+      "args": ["--setup-only"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache / build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Local settings and secrets (copy config/config.example.toml -> config/config.toml)
+config/config.toml
+.env
+
+# Uncompressed dataset (the repo ships data/berka.sql.gz)
+data/*.sql
+
+# MySQL Workbench backups
+*.mwb.bak
+*.mwb.beforefix
+
+# Editors / OS (.vscode/ is shared on purpose)
+.idea/
+.DS_Store
+Thumbs.db
+*.log

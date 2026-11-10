@@ -1,0 +1,39 @@
+[project]
+name = "berka-bank"
+version = "0.1.0"
+description = "Berka bank database: MySQL physical model, routines, triggers and an ipywidgets interface."
+readme = "README.md"
+authors = [
+    { name = "Juan Felipe Molano Vega" },
+    { name = "Juan Pablo Castaño Morales" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "cryptography>=42",
+    "ipykernel>=6.29",
+    "ipywidgets>=8.1",
+    "pandas>=2.2",
+    "pymysql>=1.1",
+    "sqlalchemy>=2.0",
+    "voila>=0.5",
+]
+
+[project.scripts]
+berka = "berka_bank.main:main"
+
+[dependency-groups]
+dev = [
+    "jupyterlab>=4.2",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# The UI shows any database error to the user instead of crashing.
+ignore = ["BLE001"]
