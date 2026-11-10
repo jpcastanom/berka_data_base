@@ -57,7 +57,7 @@ def prepare_database(db: Database, rebuild: bool, reload_staging: bool) -> None:
 def launch_ui(db: Database, port: int, open_browser: bool) -> None:
     # The Voilà kernel is a separate process: hand it the password so it never has to prompt.
     env = os.environ | {"MYSQL_PASSWORD": db.settings.password}
-    cmd = [sys.executable, "-m", "voila", str(UI_NOTEBOOK), f"--port={port}", "--show_tracebacks=True"]
+    cmd = [sys.executable, "-m", "voila", str(UI_NOTEBOOK), f"--port={port}", "--show_tracebacks=True", "--theme=light"]
     if not open_browser:
         cmd.append("--no-browser")
     print(f"[ui] Interface at http://localhost:{port}  (Ctrl+C to stop)")

@@ -3,69 +3,119 @@
 from datetime import date
 
 import ipywidgets as w
-from IPython.display import HTML, display
 
 from berka_bank.db import Database, error_text
 from berka_bank.routines import account_statement
-from berka_bank.ui.widgets import button, field, message, section
+from berka_bank.ui.widgets import (
+    FREQUENCY,
+    actions,
+    button,
+    callout,
+    field,
+    grid,
+    kpi,
+    kpi_row,
+    message,
+    money_html,
+    output,
+    render,
+    section,
+    table,
+)
 
 
 def statement_panel(db: Database):
     account = field(w.IntText, "Cuenta", value=576)
     start = field(w.DatePicker, "Desde", value=date(1997, 1, 1))
     end = field(w.DatePicker, "Hasta", value=date(1997, 12, 31))
-    btn, out = button("Generar extracto", "file-text", "primary"), w.Output()
+    btn, out = button("Generar extracto", "file-text", "primary"), output()
 
     def run(_=None):
         try:
             summary, detail = account_statement(db, account.value, start.value, end.value)
-            message(out, "Resumen del periodo:", "info", summary)
-            with out:
-                display(HTML(f"<b>Detalle ({len(detail)} movimientos):</b>"))
-                display(detail)
+            s = summary.iloc[0]
+            info = (
+                f"Cuenta <b>{int(s.Identificador_Cuenta)}</b> · Sucursal <b>{s.Sucursal}</b> · "
+                f"Estado de cuenta {FREQUENCY.get(s.Frecuencia, s.Frecuencia).lower()} · "
+                f"{s.Desde} → {s.Hasta}"
+            )
+            tiles = kpi_row(
+                kpi("Saldo inicial", money_html(s.Saldo_Inicial)),
+                kpi("Ingresos", money_html(s.Total_Ingresos, "+ "), tone="ok"),
+                kpi("Egresos", money_html(s.Total_Egresos, "− "), tone="danger"),
+                kpi("Movimientos", f"{int(s.Num_Movimientos):,}", tone="teal"),
+                kpi("Saldo final", money_html(s.Saldo_Final), tone="strong"),
+            )
+            render(
+                out,
+                callout(info, "info"),
+                tiles,
+                f'<h4 class="bk-h4">Detalle de movimientos ({len(detail):,})</h4>',
+                table(detail),
+            )
         except Exception as e:
             message(out, error_text(e), "error")
 
     btn.on_click(run)
     return section(
         "Extracto bancario",
-        "Llama a <code>CALL sp_extracto_cuenta(cuenta, desde, hasta)</code>.",
-        account,
-        start,
-        end,
-        btn,
+        "Llama a <code>CALL sp_extracto_cuenta(cuenta, desde, hasta)</code>. Devuelve el resumen del periodo "
+        "y el detalle de movimientos.",
+        grid(account, start, end, cols=3),
+        actions(btn),
         out,
+        badge="Procedimiento",
+        badge_tone="gold",
     )
 
 
 def balance_panel(db: Database):
     account = field(w.IntText, "Cuenta", value=576)
     at = field(w.DatePicker, "A la fecha (vacío = actual)")
-    btn, out = button("Consultar saldo", "money", "primary"), w.Output()
+    btn, out = button("Consultar saldo", "money", "primary"), output()
 
     def run(_=None):
         try:
             value = db.execute("SELECT fn_saldo_cuenta(:c, :f)", {"c": account.value, "f": at.value}).scalar()
             when = at.value.isoformat() if at.value else "hoy (último movimiento)"
-            message(out, f"Saldo de la cuenta <b>{account.value}</b> a {when}: <b>{value:,.2f} Kč</b>")
+            render(
+                out,
+                kpi_row(
+                    kpi(f"Saldo · cuenta {account.value}", money_html(value), f"A la fecha: {when}", tone="strong")
+                ),
+            )
         except Exception as e:
             message(out, error_text(e), "error")
 
     btn.on_click(run)
     return section(
-        "Saldo de una cuenta", "Llama a <code>SELECT fn_saldo_cuenta(cuenta, fecha)</code>.", account, at, btn, out
+        "Saldo de una cuenta",
+        "Llama a <code>SELECT fn_saldo_cuenta(cuenta, fecha)</code>. Si la cuenta no tiene movimientos, el saldo es 0.",
+        grid(account, at),
+        actions(btn),
+        out,
+        badge="Función",
+        badge_tone="gold",
     )
 
 
 def audit_panel(db: Database):
-    btn, out = button("Refrescar", "refresh", "info"), w.Output()
+    btn, out = button("Refrescar", "refresh", "info"), output()
 
     def run(_=None):
         try:
             df = db.query("SELECT * FROM Auditoria_Cliente ORDER BY Id_Auditoria DESC LIMIT 100")
-            message(out, f"{len(df)} registro(s) de auditoría (más recientes primero).", "info", df)
+            message(out, f"<b>{len(df)}</b> registro(s) de auditoría, los más recientes primero.", "info", df)
         except Exception as e:
             message(out, error_text(e), "error")
 
     btn.on_click(run)
-    return section("Auditoría de clientes", "Registros que inserta <code>trg_cliente_after_update</code>.", btn, out)
+    return section(
+        "Auditoría de clientes",
+        "Registros que inserta <code>trg_cliente_after_update</code> cada vez que cambia un cliente: "
+        "valores anteriores y nuevos, usuario y fecha.",
+        actions(btn),
+        out,
+        badge="Trigger",
+        badge_tone="gold",
+    )

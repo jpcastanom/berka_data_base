@@ -6,7 +6,21 @@ import ipywidgets as w
 import pandas as pd
 
 from berka_bank.db import Database, error_text
-from berka_bank.ui.widgets import Catalogs, button, field, message, section, tabs, to_none
+from berka_bank.ui.widgets import (
+    Catalogs,
+    actions,
+    button,
+    field,
+    grid,
+    message,
+    output,
+    row,
+    section,
+    tabs,
+    to_none,
+)
+
+BADGE = {"badge": "Tabla Transacciones", "badge_tone": "teal"}
 
 
 def transaction_form(cat: Catalogs) -> dict:
@@ -14,12 +28,12 @@ def transaction_form(cat: Catalogs) -> dict:
     return {
         "Fecha_Realizada": field(w.DatePicker, "Fecha", value=date.today()),
         "Tipo_Movimiento": field(w.Dropdown, "Tipo de movimiento", options=cat.movement_type),
-        "Operacion_Efectuada": field(w.Dropdown, "Operación", options=cat.operation, value=None),
+        "Operacion_Efectuada": field(w.Dropdown, "Operación", options=cat.operation, index=0),
         "Caracterizacion_Operacion": field(
-            w.Dropdown, "Caracterización (k_symbol)", options=cat.characterization, value=None
+            w.Dropdown, "Caracterización (k_symbol)", options=cat.characterization, index=0
         ),
         "Monto_Involucrado": field(w.BoundedFloatText, "Monto (Kč)", value=1000, min=-1e9, max=1e9),
-        "Banco": field(w.Dropdown, "Banco contraparte", options=cat.bank, value=None),
+        "Banco": field(w.Dropdown, "Banco contraparte", options=cat.bank, index=0),
         "Cuenta_Contraparte": field(w.IntText, "Cuenta contraparte (0 = ninguna)", value=0),
     }
 
@@ -32,11 +46,11 @@ def form_values(form: dict) -> dict:
 
 def query_tab(db: Database, cat: Catalogs):
     q_account = field(w.IntText, "Cuenta (0 = todas)", value=576)
+    q_type = field(w.Dropdown, "Tipo de movimiento", options=[("(todos)", None)] + cat.movement_type, index=0)
     q_from = field(w.DatePicker, "Desde (opcional)")
     q_to = field(w.DatePicker, "Hasta (opcional)")
-    q_type = field(w.Dropdown, "Tipo de movimiento", options=[("(todos)", None)] + cat.movement_type, value=None)
     q_lim = field(w.BoundedIntText, "Máximo de filas", value=25, min=1, max=10000)
-    btn, out = button("Consultar", "search", "info"), w.Output()
+    btn, out = button("Consultar", "search", "info"), output()
 
     def run(_=None):
         filters, params = [], {"lim": q_lim.value}
@@ -60,18 +74,25 @@ def query_tab(db: Database, cat: Catalogs):
                 + " ORDER BY Fecha_Realizada DESC, Codigo_Transacciones DESC LIMIT :lim",
                 params,
             )
-            message(out, f"{len(df)} transacción(es) (más recientes primero).", "info", df)
+            message(out, f"<b>{len(df)}</b> transacción(es), las más recientes primero.", "info", df)
         except Exception as e:
             message(out, error_text(e), "error")
 
     btn.on_click(run)
-    return section("Consultar transacciones", "Filtros opcionales.", q_account, q_from, q_to, q_type, q_lim, btn, out)
+    return section(
+        "Consultar transacciones",
+        "Todos los filtros son opcionales.",
+        grid(q_account, q_type, q_from, q_to, q_lim),
+        actions(btn),
+        out,
+        **BADGE,
+    )
 
 
 def insert_tab(db: Database, cat: Catalogs):
     i_account = field(w.IntText, "Cuenta", value=576)
     form = transaction_form(cat)
-    btn, out = button("Insertar transacción", "plus", "success"), w.Output()
+    btn, out = button("Insertar transacción", "plus", "success"), output()
 
     def run(_=None):
         params = form_values(form) | {"c": i_account.value}
@@ -100,10 +121,10 @@ def insert_tab(db: Database, cat: Catalogs):
         "Nueva transacción",
         "No se pide el saldo: lo calcula el trigger <code>trg_transacciones_before_insert</code>, "
         "que además rechaza montos ≤ 0 y fechas anteriores a la apertura de la cuenta.",
-        i_account,
-        *form.values(),
-        btn,
+        grid(i_account, *form.values()),
+        actions(btn),
         out,
+        **BADGE,
     )
 
 
@@ -112,7 +133,7 @@ def update_tab(db: Database, cat: Catalogs):
     load_btn = button("Cargar", "download", "info")
     form = transaction_form(cat)
     u_balance = field(w.FloatText, "Saldo resultante (Kč)", value=0)
-    save_btn, out = button("Guardar cambios", "save", "warning"), w.Output()
+    save_btn, out = button("Guardar cambios", "save", "warning"), output()
     state = {"id": None}
 
     def enable(on):
@@ -127,20 +148,23 @@ def update_tab(db: Database, cat: Catalogs):
             state["id"] = None
             enable(False)
             return message(out, f"No existe la transacción {u_id.value}.", "error")
-        row = df.iloc[0]
-        state["id"] = int(row.Codigo_Transacciones)
+        r = df.iloc[0]
+        state["id"] = int(r.Codigo_Transacciones)
         for k, x in form.items():
-            value = row[k]
+            value = r[k]
             if pd.isna(value):
-                value = 0 if k == "Cuenta_Contraparte" else None
+                if k != "Cuenta_Contraparte":
+                    x.index = 0  # "(ninguna)" / "(ninguno)"
+                    continue
+                value = 0
             elif k == "Monto_Involucrado":
                 value = float(value)
             elif k == "Cuenta_Contraparte":
                 value = int(value)
             x.value = value
-        u_balance.value = float(row.Saldo_Resultante_Cuenta)
+        u_balance.value = float(r.Saldo_Resultante_Cuenta)
         enable(True)
-        message(out, f"Transacción {state['id']} (cuenta {int(row.Identificador_Cuenta)}) cargada.", "info")
+        message(out, f"Transacción <b>{state['id']}</b> (cuenta {int(r.Identificador_Cuenta)}) cargada.", "info")
 
     def save(_=None):
         if state["id"] is None:
@@ -167,19 +191,19 @@ def update_tab(db: Database, cat: Catalogs):
     return section(
         "Modificar transacción",
         "Corrige datos de un movimiento. El saldo se edita manualmente "
-        "(el trigger solo actúa al insertar). La restricción CHECK impide montos negativos.",
-        w.HBox([u_id, load_btn]),
-        *form.values(),
-        u_balance,
-        save_btn,
+        "(el trigger solo actúa al insertar). La restricción <code>CHECK</code> impide montos negativos.",
+        row(u_id, load_btn),
+        grid(*form.values(), u_balance),
+        actions(save_btn),
         out,
+        **BADGE,
     )
 
 
 def delete_tab(db: Database):
     d_id = field(w.IntText, "Código transacción", value=0)
     confirm = w.Checkbox(description="Confirmo que deseo borrar esta transacción", indent=False)
-    btn, out = button("Borrar transacción", "trash", "danger"), w.Output()
+    btn, out = button("Borrar transacción", "trash", "danger"), output()
 
     def run(_=None):
         if not confirm.value:
@@ -188,7 +212,7 @@ def delete_tab(db: Database):
             n = db.execute("DELETE FROM Transacciones WHERE Codigo_Transacciones = :id", {"id": d_id.value}).rowcount
             message(
                 out,
-                f"Transacción {d_id.value} eliminada." if n else f"No existe la transacción {d_id.value}.",
+                f"Transacción <b>{d_id.value}</b> eliminada." if n else f"No existe la transacción {d_id.value}.",
                 "ok" if n else "error",
             )
         except Exception as e:
@@ -196,7 +220,9 @@ def delete_tab(db: Database):
         confirm.value = False
 
     btn.on_click(run)
-    return section("Eliminar transacción", "", d_id, confirm, btn, out)
+    return section(
+        "Eliminar transacción", "Esta acción no se puede deshacer.", grid(d_id), confirm, actions(btn), out, **BADGE
+    )
 
 
 def build(db: Database, cat: Catalogs):
@@ -206,5 +232,6 @@ def build(db: Database, cat: Catalogs):
             ("Insertar", insert_tab(db, cat)),
             ("Actualizar", update_tab(db, cat)),
             ("Borrar", delete_tab(db)),
-        ]
+        ],
+        sub=True,
     )

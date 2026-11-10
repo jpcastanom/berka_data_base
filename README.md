@@ -8,6 +8,20 @@ Database design for managing bank customers, their accounts and the financial op
 
 This project models a relational database for a bank. It stores customers, the accounts they hold, the transactions made on those accounts, standing payment orders, loans and issued cards. It also stores demographic data for each district, so financial behavior can be analyzed against the characteristics of the area where customers and branches are located.
 
+## Preview
+
+![Home screen of the interface](docs/images/inicio.png)
+
+The home tab of the interface (in Spanish) shows the totals of the model, the movements by type and the status of the loans. It is shown here with the full dataset loaded.
+
+## Data source
+
+The data comes from the **Berka dataset**, a real anonymized sample of a Czech bank (clients, accounts, transactions, loans, cards and district demographics), published on Kaggle:
+
+<https://www.kaggle.com/datasets/marceloventura/the-berka-dataset/data>
+
+It is loaded as is from `data/berka.sql.gz` (8 tables, 1,056,320 transactions) into a staging database and then migrated to the corrected physical model. Check the license and terms on the Kaggle page before reusing or redistributing the data.
+
 ## Context
 
 A bank needs a database to administer the information about its customers, their accounts and the financial operations carried out on them. The data is organized around the following entities.
@@ -46,7 +60,8 @@ berka_data_base/
 │   └── berka.sql.gz          # original dataset (compressed)
 ├── docs/
 │   ├── Diccionario_de_datos.docx
-│   └── sql_Entrega2_documentado.mwb
+│   ├── sql_Entrega2_documentado.mwb
+│   └── images/inicio.png     # screenshot used in this README
 ├── notebooks/
 │   └── Tercera_Entrega_Berka.ipynb   # step-by-step report of the third delivery
 ├── sql/
@@ -60,6 +75,13 @@ berka_data_base/
     ├── migration.py          # 3. staging -> model + validation against the dictionary
     ├── routines.py           # 4. fn_saldo_cuenta, sp_extracto_cuenta, triggers
     └── ui/                   # ipywidgets interface (Spanish), served with Voilà
+        ├── app.py            # header, tabs and page assembly
+        ├── theme.py          # CSS theme
+        ├── widgets.py        # form fields, tables, KPI tiles, bars
+        ├── home.py           # "Inicio" dashboard
+        ├── clients.py        # CRUD on Cliente
+        ├── transactions.py   # CRUD on Transacciones
+        └── routines.py       # procedure, function and audit trigger tabs
 ```
 
 ## Getting started
@@ -79,7 +101,7 @@ uv run berka
 1. **Staging**: loads `data/berka.sql.gz` into the `berka` database (1-3 min, only the first time).
 2. **Model**: creates `banco_berka` and migrates the data (about 1 min, only if it does not exist yet).
 3. **Routines**: recreates the function, the procedure and both triggers.
-4. **Interface**: serves the app (tabs Clientes, Transacciones, Extracto, Saldo, Auditoría).
+4. **Interface**: serves the app (tabs Inicio, Clientes, Transacciones, Extracto, Saldo, Auditoría).
 
 Later runs skip steps 1 and 2, so the changes made from the interface are kept.
 

@@ -5,7 +5,21 @@ from datetime import date
 import ipywidgets as w
 
 from berka_bank.db import Database, error_text
-from berka_bank.ui.widgets import Catalogs, button, field, message, section, tabs, to_none
+from berka_bank.ui.widgets import (
+    Catalogs,
+    actions,
+    button,
+    field,
+    grid,
+    message,
+    output,
+    row,
+    section,
+    tabs,
+    to_none,
+)
+
+BADGE = {"badge": "Tabla Cliente"}
 
 SQL_CLIENT_DETAIL = """
     SELECT c.Identificador_Cliente, c.Fecha_Nacimiento, c.Genero, c.ID_Distrito, d.Nombre_Distrito,
@@ -16,10 +30,10 @@ SQL_CLIENT_DETAIL = """
 
 def query_tab(db: Database, cat: Catalogs):
     q_id = field(w.IntText, "ID cliente (0 = todos)", value=0)
-    q_dist = field(w.Dropdown, "Distrito", options=[("(todos)", None)] + cat.district, value=None)
-    q_gen = field(w.Dropdown, "Género", options=[("(todos)", None)] + cat.gender, value=None)
+    q_dist = field(w.Dropdown, "Distrito", options=[("(todos)", None)] + cat.district, index=0)
+    q_gen = field(w.Dropdown, "Género", options=[("(todos)", None)] + cat.gender, index=0)
     q_lim = field(w.BoundedIntText, "Máximo de filas", value=25, min=1, max=10000)
-    btn, out = button("Consultar", "search", "info"), w.Output()
+    btn, out = button("Consultar", "search", "info"), output()
 
     def run(_=None):
         filters, params = [], {"lim": q_lim.value}
@@ -35,19 +49,26 @@ def query_tab(db: Database, cat: Catalogs):
         where = (" WHERE " + " AND ".join(filters)) if filters else ""
         try:
             df = db.query(SQL_CLIENT_DETAIL + where + " ORDER BY c.Identificador_Cliente LIMIT :lim", params)
-            message(out, f"{len(df)} cliente(s) encontrados.", "info", df)
+            message(out, f"<b>{len(df)}</b> cliente(s) encontrados.", "info", df)
         except Exception as e:
             message(out, error_text(e), "error")
 
     btn.on_click(run)
-    return section("Consultar clientes", "Filtros opcionales.", q_id, q_dist, q_gen, q_lim, btn, out)
+    return section(
+        "Consultar clientes",
+        "Todos los filtros son opcionales.",
+        grid(q_id, q_dist, q_gen, q_lim),
+        actions(btn),
+        out,
+        **BADGE,
+    )
 
 
 def insert_tab(db: Database, cat: Catalogs):
     i_date = field(w.DatePicker, "Fecha de nacimiento", value=date(1980, 1, 1))
     i_gen = field(w.Dropdown, "Género", options=cat.gender)
     i_dist = field(w.Dropdown, "Distrito", options=cat.district)
-    btn, out = button("Insertar cliente", "plus", "success"), w.Output()
+    btn, out = button("Insertar cliente", "plus", "success"), output()
 
     def run(_=None):
         if i_date.value is None:
@@ -64,7 +85,12 @@ def insert_tab(db: Database, cat: Catalogs):
 
     btn.on_click(run)
     return section(
-        "Nuevo cliente", "El ID lo asigna la base de datos (AUTO_INCREMENT).", i_date, i_gen, i_dist, btn, out
+        "Nuevo cliente",
+        "El ID lo asigna la base de datos (<code>AUTO_INCREMENT</code>).",
+        grid(i_date, i_gen, i_dist),
+        actions(btn),
+        out,
+        **BADGE,
     )
 
 
@@ -74,7 +100,7 @@ def update_tab(db: Database, cat: Catalogs):
     u_date = field(w.DatePicker, "Fecha de nacimiento", disabled=True)
     u_gen = field(w.Dropdown, "Género", options=cat.gender, disabled=True)
     u_dist = field(w.Dropdown, "Distrito", options=cat.district, disabled=True)
-    save_btn, out = button("Guardar cambios", "save", "warning"), w.Output()
+    save_btn, out = button("Guardar cambios", "save", "warning"), output()
     save_btn.disabled = True
     state = {"id": None}
     editable = (u_date, u_gen, u_dist, save_btn)
@@ -86,12 +112,12 @@ def update_tab(db: Database, cat: Catalogs):
             for x in editable:
                 x.disabled = True
             return message(out, f"No existe el cliente {u_id.value}.", "error")
-        row = df.iloc[0]
-        state["id"] = int(row.Identificador_Cliente)
-        u_date.value, u_gen.value, u_dist.value = row.Fecha_Nacimiento, row.Genero, int(row.ID_Distrito)
+        r = df.iloc[0]
+        state["id"] = int(r.Identificador_Cliente)
+        u_date.value, u_gen.value, u_dist.value = r.Fecha_Nacimiento, r.Genero, int(r.ID_Distrito)
         for x in editable:
             x.disabled = False
-        message(out, f'Cliente {state["id"]} cargado. Modifique los campos y pulse "Guardar cambios".', "info")
+        message(out, f'Cliente <b>{state["id"]}</b> cargado. Modifique los campos y pulse "Guardar cambios".', "info")
 
     def save(_=None):
         if state["id"] is None:
@@ -99,12 +125,12 @@ def update_tab(db: Database, cat: Catalogs):
         try:
             n = db.execute(
                 """UPDATE Cliente SET Fecha_Nacimiento = :f, Genero = :g, ID_Distrito = :d
-                              WHERE Identificador_Cliente = :id""",
+                   WHERE Identificador_Cliente = :id""",
                 {"f": u_date.value, "g": u_gen.value, "d": u_dist.value, "id": state["id"]},
             ).rowcount
             audit = db.query(
                 """SELECT * FROM Auditoria_Cliente WHERE Identificador_Cliente = :id
-                                ORDER BY Id_Auditoria DESC LIMIT 5""",
+                   ORDER BY Id_Auditoria DESC LIMIT 5""",
                 {"id": state["id"]},
             )
             body = (
@@ -121,19 +147,18 @@ def update_tab(db: Database, cat: Catalogs):
     return section(
         "Modificar cliente",
         "Cada cambio queda registrado por el trigger de auditoría.",
-        w.HBox([u_id, load_btn]),
-        u_date,
-        u_gen,
-        u_dist,
-        save_btn,
+        row(u_id, load_btn),
+        grid(u_date, u_gen, u_dist),
+        actions(save_btn),
         out,
+        **BADGE,
     )
 
 
 def delete_tab(db: Database):
     d_id = field(w.IntText, "ID cliente", value=0)
     confirm = w.Checkbox(description="Confirmo que deseo borrar este cliente", indent=False)
-    btn, out = button("Borrar cliente", "trash", "danger"), w.Output()
+    btn, out = button("Borrar cliente", "trash", "danger"), output()
 
     def run(_=None):
         if not confirm.value:
@@ -142,7 +167,7 @@ def delete_tab(db: Database):
             n = db.execute("DELETE FROM Cliente WHERE Identificador_Cliente = :id", {"id": d_id.value}).rowcount
             message(
                 out,
-                f"Cliente {d_id.value} eliminado." if n else f"No existe el cliente {d_id.value}.",
+                f"Cliente <b>{d_id.value}</b> eliminado." if n else f"No existe el cliente {d_id.value}.",
                 "ok" if n else "error",
             )
         except Exception as e:
@@ -153,10 +178,11 @@ def delete_tab(db: Database):
     return section(
         "Eliminar cliente",
         "Un cliente con cuentas (disposiciones) no se puede borrar: lo impide la llave foránea.",
-        d_id,
+        grid(d_id),
         confirm,
-        btn,
+        actions(btn),
         out,
+        **BADGE,
     )
 
 
@@ -167,5 +193,6 @@ def build(db: Database, cat: Catalogs):
             ("Insertar", insert_tab(db, cat)),
             ("Actualizar", update_tab(db, cat)),
             ("Borrar", delete_tab(db)),
-        ]
+        ],
+        sub=True,
     )
