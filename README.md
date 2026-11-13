@@ -73,7 +73,7 @@ berka_data_base/
     ├── staging.py            # 1. load berka.sql into `berka`
     ├── schema.py             # 2. physical model `banco_berka` (DDL)
     ├── migration.py          # 3. staging -> model + validation against the dictionary
-    ├── routines.py           # 4. fn_saldo_cuenta, sp_extracto_cuenta, triggers
+    ├── routines.py           # 4. fn_saldo_cuenta, sp_extracto_cuenta, vw_resumen_cuenta, triggers
     └── ui/                   # ipywidgets interface (Spanish), served with Voilà
         ├── app.py            # header, tabs and page assembly
         ├── theme.py          # CSS theme
@@ -81,7 +81,7 @@ berka_data_base/
         ├── home.py           # "Inicio" dashboard
         ├── clients.py        # CRUD on Cliente
         ├── transactions.py   # CRUD on Transacciones
-        └── routines.py       # procedure, function and audit trigger tabs
+        └── routines.py       # procedure, function, view and audit trigger tabs
 ```
 
 ## Getting started
@@ -100,8 +100,8 @@ uv run berka
 
 1. **Staging**: loads `data/berka.sql.gz` into the `berka` database (1-3 min, only the first time).
 2. **Model**: creates `banco_berka` and migrates the data (about 1 min, only if it does not exist yet).
-3. **Routines**: recreates the function, the procedure and both triggers.
-4. **Interface**: serves the app (tabs Inicio, Clientes, Transacciones, Extracto, Saldo, Auditoría).
+3. **Routines**: recreates the function, the procedure, the view and both triggers.
+4. **Interface**: serves the app (tabs Inicio, Clientes, Transacciones, Extracto, Saldo, Resumen, Auditoría).
 
 Later runs skip steps 1 and 2, so the changes made from the interface are kept.
 

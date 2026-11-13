@@ -1,4 +1,4 @@
-"""Step 4: stored function, procedure and triggers.
+"""Step 4: stored function, procedure, view and triggers.
 
 They are created from Python, so no DELIMITER is needed. Triggers are created
 AFTER the migration; otherwise they would fire for every historical transaction.
@@ -125,12 +125,46 @@ BEGIN
 END
 """
 
+# One row per account (inner joins: owner and district always exist). Card and loan are
+# optional, and each is unique per disposition / account, so rows never multiply.
+VW_ACCOUNT_OVERVIEW = """
+CREATE VIEW vw_resumen_cuenta AS
+SELECT c.Identificador_Cuenta,
+       c.Fecha_Apertura,
+       c.Frecuencia_Emision_Estado_Cuenta                  AS Frecuencia,
+       d.Nombre_Distrito                                   AS Sucursal,
+       d.Region_que_pertenece                              AS Region,
+       cl.Identificador_Cliente                            AS Id_Titular,
+       cl.Fecha_Nacimiento                                 AS Nacimiento_Titular,
+       cl.Genero                                           AS Genero_Titular,
+       (SELECT COUNT(*) FROM Disposicion x
+         WHERE x.Identificador_Cuenta = c.Identificador_Cuenta
+           AND x.Tipo_Disposicion = 'DISPONENT')           AS Num_Autorizados,
+       t.Tipo_Tarjeta                                      AS Tarjeta_Titular,
+       p.Codigo_Prestamos,
+       p.Monto_Otorgado                                    AS Monto_Prestamo,
+       p.Codigo_Estado                                     AS Estado_Prestamo,
+       e.Descripcion_Estado                                AS Descripcion_Estado_Prestamo,
+       fn_saldo_cuenta(c.Identificador_Cuenta, NULL)       AS Saldo_Actual
+FROM Cuenta c
+JOIN Distrito d       ON d.ID_Distrito = c.ID_Distrito
+JOIN Disposicion o    ON o.Identificador_Cuenta = c.Identificador_Cuenta AND o.Tipo_Disposicion = 'OWNER'
+JOIN Cliente cl       ON cl.Identificador_Cliente = o.Identificador_Cliente
+LEFT JOIN Tarjeta t   ON t.Codigo_Disposicion = o.Codigo_Disposicion
+LEFT JOIN Prestamos p ON p.Identificador_Cuenta = c.Identificador_Cuenta
+LEFT JOIN Estado_Prestamo e ON e.Codigo_Estado = p.Codigo_Estado
+"""
+
+# The view calls fn_saldo_cuenta, so the function goes first.
 ROUTINES = [
     ("FUNCTION", "fn_saldo_cuenta", FN_ACCOUNT_BALANCE),
     ("PROCEDURE", "sp_extracto_cuenta", SP_ACCOUNT_STATEMENT),
+    ("VIEW", "vw_resumen_cuenta", VW_ACCOUNT_OVERVIEW),
     ("TRIGGER", "trg_transacciones_before_insert", TRG_TRANSACTIONS_BEFORE_INSERT),
     ("TRIGGER", "trg_cliente_after_update", TRG_CLIENT_AFTER_UPDATE),
 ]
+
+NO_LOAN = "-"  # filter value for "accounts without a loan"
 
 
 def create_all(db: Database) -> None:
@@ -154,3 +188,21 @@ def account_statement(db: Database, account: int, start, end) -> tuple[pd.DataFr
         return summary, detail
     finally:
         raw.close()
+
+
+def account_overview(db: Database, account: int | None = None, region: str | None = None, loan: str | None = None):
+    """Rows of vw_resumen_cuenta. `loan`: a status letter (A-D), NO_LOAN for accounts without one, None for all."""
+    where, params = [], {}
+    if account:
+        where.append("Identificador_Cuenta = :account")
+        params["account"] = account
+    if region:
+        where.append("Region = :region")
+        params["region"] = region
+    if loan == NO_LOAN:
+        where.append("Codigo_Prestamos IS NULL")
+    elif loan:
+        where.append("Estado_Prestamo = :loan")
+        params["loan"] = loan
+    clause = f"WHERE {' AND '.join(where)}" if where else ""
+    return db.query(f"SELECT * FROM vw_resumen_cuenta {clause} ORDER BY Identificador_Cuenta", params)

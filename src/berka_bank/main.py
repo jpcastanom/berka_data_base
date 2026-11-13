@@ -7,7 +7,7 @@
 Steps
     1. staging   : load berka.sql into the `berka` database (skipped if already loaded)
     2. model     : create banco_berka and migrate the data (skipped if already built)
-    3. routines  : (re)create fn_saldo_cuenta, sp_extracto_cuenta and both triggers
+    3. routines  : (re)create fn_saldo_cuenta, sp_extracto_cuenta, vw_resumen_cuenta and both triggers
     4. interface : serve the ipywidgets app with Voilà at http://localhost:<port>
 """
 
@@ -50,7 +50,7 @@ def prepare_database(db: Database, rebuild: bool, reload_staging: bool) -> None:
     else:
         print(f"[model] '{db.settings.model_db}' already built, skipping (use --rebuild to recreate it).")
 
-    print("[routines] Creating function, procedure and triggers...")
+    print("[routines] Creating function, procedure, view and triggers...")
     routines.create_all(db)
 
 

@@ -24,6 +24,7 @@ berka = "berka_bank.main:main"
 [dependency-groups]
 dev = [
     "jupyterlab>=4.2",
+    "pytest>=8",
     "ruff>=0.6",
 ]
 
@@ -37,3 +38,6 @@ line-length = 120
 [tool.ruff.lint]
 # The UI shows any database error to the user instead of crashing.
 ignore = ["BLE001"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

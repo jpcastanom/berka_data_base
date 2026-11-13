@@ -1,11 +1,11 @@
-"""Tabs for the stored procedure, the function and the audit trigger."""
+"""Tabs for the stored procedure, the function, the account view and the audit trigger."""
 
 from datetime import date
 
 import ipywidgets as w
 
 from berka_bank.db import Database, error_text
-from berka_bank.routines import account_statement
+from berka_bank.routines import NO_LOAN, account_overview, account_statement
 from berka_bank.ui.widgets import (
     FREQUENCY,
     actions,
@@ -117,5 +117,46 @@ def audit_panel(db: Database):
         actions(btn),
         out,
         badge="Trigger",
+        badge_tone="gold",
+    )
+
+
+def overview_panel(db: Database):
+    regions = db.query("SELECT DISTINCT Region_que_pertenece AS r FROM Distrito ORDER BY 1")["r"]
+    account = field(w.IntText, "Cuenta (0 = todas)", value=0)
+    region = field(w.Dropdown, "Región", options=[("(todas)", None)] + [(r, r) for r in regions], value=None)
+    states = db.query("SELECT Codigo_Estado AS c, Descripcion_Estado AS d FROM Estado_Prestamo ORDER BY 1")
+    loan = field(
+        w.Dropdown,
+        "Préstamo",
+        options=[("(todos)", None), ("Sin préstamo", NO_LOAN)] + [(f"{r.c} · {r.d}", r.c) for r in states.itertuples()],
+        value=None,
+    )
+    btn, out = button("Consultar", "search", "primary"), output()
+
+    def run(_=None):
+        try:
+            df = account_overview(db, account.value, region.value, loan.value)
+            render(
+                out,
+                kpi_row(
+                    kpi("Cuentas", f"{len(df):,}", tone="teal"),
+                    kpi("Con préstamo", f"{int(df.Codigo_Prestamos.notna().sum()):,}", tone="gold"),
+                    kpi("Saldo total", money_html(df.Saldo_Actual.sum()), tone="strong"),
+                ),
+                table(df),
+            )
+        except Exception as e:
+            message(out, error_text(e), "error")
+
+    btn.on_click(run)
+    return section(
+        "Resumen de cuentas",
+        "Consulta la vista <code>vw_resumen_cuenta</code>: una fila por cuenta con sucursal, titular, tarjeta, "
+        "préstamo y saldo actual.",
+        grid(account, region, loan, cols=3),
+        actions(btn),
+        out,
+        badge="Vista",
         badge_tone="gold",
     )
