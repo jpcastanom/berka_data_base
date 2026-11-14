@@ -1,12 +1,11 @@
 """Tabs for the stored procedure, the function, the account view and the audit trigger."""
 
 from datetime import date
+from html import escape
 
 import ipywidgets as w
 
 from berka_bank.db import Database, error_text
-from html import escape
-
 from berka_bank.routines import NO_LOAN, VW_ACCOUNT_OVERVIEW, account_overview, account_statement
 from berka_bank.ui.widgets import (
     FREQUENCY,
