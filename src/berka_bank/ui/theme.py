@@ -31,9 +31,11 @@ body, .jp-Notebook, .jp-OutputArea, .jp-OutputArea-output, #rendered_cells, .jp-
 
 /* ---------- root + widget variables ---------- */
 .bk-root {
-  max-width: 1120px;
+  width: 100%;
+  max-width: 1800px;
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: 20px 18px 36px;
+  padding: clamp(12px, 2.5vw, 40px) clamp(12px, 2.5vw, 40px) 36px;
   color: var(--bk-ink);
   font-family: var(--bk-font);
   font-size: 14px;
@@ -58,6 +60,7 @@ body, .jp-Notebook, .jp-OutputArea, .jp-OutputArea-output, #rendered_cells, .jp-
 .bk-root .widget-html, .bk-root .widget-html-content, .bk-root .widget-hbox, .bk-root .widget-vbox { overflow: visible; }
 .bk-root .jp-RenderedHTMLCommon h4 { font-weight: 700; margin: 4px 0 0; }
 .bk-root .jp-RenderedHTMLCommon { padding: 0; }
+.bk-root .widget-html, .bk-root .widget-html-content { height: auto; line-height: 1.45; }
 
 /* ---------- header ---------- */
 .bk-header {
@@ -202,7 +205,7 @@ body, .jp-Notebook, .jp-OutputArea, .jp-OutputArea-output, #rendered_cells, .jp-
 .bk-out > * + * , .bk-out .jp-OutputArea-child + .jp-OutputArea-child { margin-top: 14px; }
 
 /* ---------- tables ---------- */
-.bk-table-wrap { max-height: 380px; overflow: auto; border: 1px solid var(--bk-line); border-radius: 12px; background: #fff; box-shadow: var(--bk-shadow-sm); }
+.bk-table-wrap { max-height: clamp(300px, 65vh, 720px); overflow: auto; border: 1px solid var(--bk-line); border-radius: 12px; background: #fff; box-shadow: var(--bk-shadow-sm); }
 .bk-root .bk-table { table-layout: auto; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
 .bk-root .bk-table th {
   max-width: none; overflow: visible; text-overflow: clip;
@@ -220,14 +223,14 @@ body, .jp-Notebook, .jp-OutputArea, .jp-OutputArea-output, #rendered_cells, .jp-
 .bk-empty { padding: 26px; text-align: center; color: var(--bk-muted); border: 1px dashed #d8d1c2; border-radius: 12px; background: var(--bk-soft); }
 
 /* ---------- KPIs ---------- */
-.bk-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.bk-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
 .bk-root .bk-kpi {
   position: relative; overflow: hidden; padding: 16px 18px 15px; border-radius: 12px; background: #fff;
   border: 1px solid var(--bk-line); box-shadow: var(--bk-shadow-sm);
 }
 .bk-kpi.bk-strong { background: var(--bk-primary); border-color: var(--bk-primary); box-shadow: 0 4px 14px rgba(106,130,100,.35); }
 .bk-kpi-label { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--bk-muted); }
-.bk-kpi-value { margin-top: 6px; white-space: nowrap; font-size: 24px; font-weight: 700; letter-spacing: -.01em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.bk-kpi-value { margin-top: 6px; white-space: nowrap; font-size: clamp(20px, 2vw, 26px); font-weight: 700; letter-spacing: -.01em; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .bk-unit { font-size: 13px; font-weight: 600; opacity: .65; margin-left: 2px; }
 .bk-kpi-sub { margin-top: 4px; font-size: 12px; color: var(--bk-muted); }
 .bk-kpi.bk-strong .bk-kpi-label, .bk-kpi.bk-strong .bk-kpi-sub { color: rgba(255,255,255,.8); }
@@ -252,11 +255,25 @@ body, .jp-Notebook, .jp-OutputArea, .jp-OutputArea-output, #rendered_cells, .jp-
 .bk-steps b { color: var(--bk-ink); }
 .bk-footer { margin-top: 26px; text-align: center; color: var(--bk-muted); font-size: 12px; }
 
-@media (max-width: 760px) {
-  .bk-grid { grid-template-columns: 1fr !important; }
+/* ---------- responsive ---------- */
+@media (max-width: 960px) {
+  /* forms: as many columns as fit, whatever the Python side asked for */
+  .bk-root .bk-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important; }
   .bk-two { grid-template-columns: 1fr; }
-  .bk-header { padding: 18px; }
-  .bk-card { padding: 18px; }
+}
+@media (max-width: 640px) {
+  .bk-header { padding: 16px; }
+  .bk-conn { width: 100%; box-sizing: border-box; border-radius: 12px; flex-wrap: wrap; gap: 4px 10px; }
+  .bk-card { padding: 16px; }
+  .bk-card-head { flex-wrap: wrap; }
+  .bk-title { font-size: 20px; }
+  .bk-root .jupyter-button { width: 100%; }
+  .bk-actions { width: 100%; }
+  .bk-row > .bk-field { flex: 1 1 100%; }
+  /* main tabs: one scrollable line instead of three wrapped rows */
+  .bk-root .bk-tabs > .p-TabBar .p-TabBar-content, .bk-root .bk-tabs > .lm-TabBar .lm-TabBar-content {
+    flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin;
+  }
 }
 """
 

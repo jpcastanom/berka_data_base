@@ -124,13 +124,13 @@ def audit_panel(db: Database):
 def overview_panel(db: Database):
     regions = db.query("SELECT DISTINCT Region_que_pertenece AS r FROM Distrito ORDER BY 1")["r"]
     account = field(w.IntText, "Cuenta (0 = todas)", value=0)
-    region = field(w.Dropdown, "Región", options=[("(todas)", None)] + [(r, r) for r in regions], value=None)
+    region = field(w.Dropdown, "Región", options=[("(todas)", "")] + [(r, r) for r in regions], value="")
     states = db.query("SELECT Codigo_Estado AS c, Descripcion_Estado AS d FROM Estado_Prestamo ORDER BY 1")
     loan = field(
         w.Dropdown,
         "Préstamo",
-        options=[("(todos)", None), ("Sin préstamo", NO_LOAN)] + [(f"{r.c} · {r.d}", r.c) for r in states.itertuples()],
-        value=None,
+        options=[("(todos)", ""), ("Sin préstamo", NO_LOAN)] + [(f"{r.c} · {r.d}", r.c) for r in states.itertuples()],
+        value="",
     )
     btn, out = button("Consultar", "search", "primary"), output()
 
