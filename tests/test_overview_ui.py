@@ -1,4 +1,4 @@
-"""The 'Resumen' tab: it is wired into the app and its button runs the query without errors."""
+"""The 'Vista' tab: it is wired into the app and its button runs the query without errors."""
 
 from berka_bank.ui import app
 from berka_bank.ui import routines as ui_routines
@@ -18,7 +18,7 @@ def test_tab_is_registered_in_the_app(loaded):
     import ipywidgets as w
 
     tabs = find(app.build(loaded), w.Tab)
-    assert "Resumen" in tabs.titles
+    assert "Vista" in tabs.titles
 
 
 def test_button_renders_table_and_filters(loaded, monkeypatch):
@@ -29,8 +29,9 @@ def test_button_renders_table_and_filters(loaded, monkeypatch):
     monkeypatch.setattr(ui_routines, "message", lambda out, body, kind="ok", df=None: shown.append(f"{kind}:{body}"))
 
     panel = ui_routines.overview_panel(loaded)
-    button = find(panel, w.Button)
-    button.click()
+    assert "Saldo total" in "".join(shown)  # already loaded when the tab is built
+    shown.clear()
+    find(panel, w.Button).click()
     html = "".join(shown)
     assert "Cuentas" in html and "Saldo total" in html and "error:" not in html
     assert html.count("<tr>") == 1 + 3  # header + the 3 accounts with an owner

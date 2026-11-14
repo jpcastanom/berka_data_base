@@ -1,0 +1,36 @@
+<svg viewBox="0 0 560 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustración: teléfono con tarjeta protegida, billetes, monedas y lupa sobre un documento">
+  <!-- documento amarillo -->
+  <polygon points="30,310 250,222 462,310 242,404" fill="#fdd04b"/>
+  <polygon points="30,310 242,404 242,418 30,324" fill="#e0a82a"/>
+  <polygon points="242,404 462,310 462,324 242,418" fill="#c98f1c"/>
+  <polygon points="372,356 462,320 500,372 410,408" fill="#fde7a3"/>
+  <!-- billete 1 (sobre el documento) -->
+  <polygon points="70,236 214,176 310,218 166,280" fill="#7cc27a"/>
+  <polygon points="70,236 166,280 166,294 70,250" fill="#3f9a52"/>
+  <polygon points="166,280 310,218 310,232 166,294" fill="#2f7f43"/>
+  <ellipse cx="190" cy="228" rx="34" ry="17" transform="rotate(-23 190 228)" fill="#5fae62"/>
+  <!-- billete 2 -->
+  <polygon points="196,330 298,288 384,326 282,368" fill="#7cc27a"/>
+  <polygon points="196,330 282,368 282,380 196,342" fill="#3f9a52"/>
+  <polygon points="282,368 384,326 384,338 282,380" fill="#2f7f43"/>
+  <ellipse cx="290" cy="328" rx="26" ry="13" transform="rotate(-23 290 328)" fill="#5fae62"/>
+  <!-- lupa -->
+  <line x1="312" y1="290" x2="392" y2="350" stroke="#2f7f43" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="282" cy="262" r="52" fill="#fff6d4" fill-opacity=".55" stroke="#3f9a52" stroke-width="15"/>
+  <!-- teléfono -->
+  <polygon points="378,34 500,96 500,318 378,256" fill="#1d2f8f"/>
+  <polygon points="362,42 484,104 484,326 362,264" fill="#d6e6fb"/>
+  <polygon points="400,138 428,152 456,138 456,196 428,236 400,196" fill="#e8921f"/>
+  <polygon points="428,152 456,138 456,196 428,236" fill="#cf7a12"/>
+  <!-- tarjeta -->
+  <polygon points="334,178 436,230 436,282 334,230" fill="#1d2f8f"/>
+  <polygon points="346,196 420,233 420,243 346,206" fill="#d6e6fb"/>
+  <polygon points="346,214 400,241 400,251 346,224" fill="#d6e6fb"/>
+  <!-- monedas -->
+  <g>
+    <rect x="446" y="258" width="44" height="64" fill="#e0a82a"/><ellipse cx="468" cy="322" rx="22" ry="9" fill="#e0a82a"/><ellipse cx="468" cy="258" rx="22" ry="9" fill="#fdd04b"/>
+    <rect x="404" y="324" width="40" height="30" fill="#e0a82a"/><ellipse cx="424" cy="354" rx="20" ry="8" fill="#e0a82a"/><ellipse cx="424" cy="324" rx="20" ry="8" fill="#fdd04b"/>
+    <rect x="504" y="298" width="40" height="70" fill="#e0a82a"/><ellipse cx="524" cy="368" rx="20" ry="8" fill="#e0a82a"/><ellipse cx="524" cy="298" rx="20" ry="8" fill="#fdd04b"/>
+    <rect x="456" y="362" width="38" height="24" fill="#e0a82a"/><ellipse cx="475" cy="386" rx="19" ry="8" fill="#e0a82a"/><ellipse cx="475" cy="362" rx="19" ry="8" fill="#fdd04b"/>
+  </g>
+</svg>

@@ -1,5 +1,7 @@
 """'Inicio' tab: dashboard with totals and distributions read from the model."""
 
+from pathlib import Path
+
 import ipywidgets as w
 
 from berka_bank.db import Database, error_text
@@ -14,6 +16,14 @@ from berka_bank.ui.widgets import (
     output,
     render,
     section,
+)
+
+HERO_SVG = (Path(__file__).parent / "hero.svg").read_text(encoding="utf-8")
+HERO = (
+    '<div class="bk-hero"><div><h1>Banco Berka:<br>clientes, cuentas<br>y operaciones</h1>'
+    "<p>Consulta, registra y audita la información del banco sobre MySQL.</p>"
+    '<div class="bk-hero-tags"><span>Función</span><span>Procedimiento</span><span>Vista</span><span>2 triggers</span></div>'
+    f"</div><div>{HERO_SVG}</div></div>"
 )
 
 SQL_TOTALS = """
@@ -39,6 +49,7 @@ GUIDE = """
   <li><b>Clientes</b> y <b>Transacciones</b>: consultar, insertar, actualizar y borrar registros.</li>
   <li><b>Extracto</b>: ejecuta el procedimiento <code>sp_extracto_cuenta</code>.</li>
   <li><b>Saldo</b>: ejecuta la función <code>fn_saldo_cuenta</code>.</li>
+  <li><b>Vista</b>: consulta la vista <code>vw_resumen_cuenta</code> y muestra su definición SQL.</li>
   <li><b>Auditoría</b>: registros del trigger <code>trg_cliente_after_update</code>.</li>
 </ol>
 """
@@ -78,7 +89,7 @@ def build(db: Database):
 
     refresh.on_click(load)
     load()
-    return section(
+    panel = section(
         "Resumen del banco",
         "Vista general de los datos migrados al modelo físico <code>banco_berka</code>.",
         out,
@@ -86,3 +97,4 @@ def build(db: Database):
         w.HTML(GUIDE),
         badge="Dashboard",
     )
+    return w.VBox([w.HTML(HERO), panel])  # the hero sits on the page, not inside a card

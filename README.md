@@ -77,6 +77,7 @@ berka_data_base/
     └── ui/                   # ipywidgets interface (Spanish), served with Voilà
         ├── app.py            # header, tabs and page assembly
         ├── theme.py          # CSS theme
+        ├── hero.svg          # illustration of the home page
         ├── widgets.py        # form fields, tables, KPI tiles, bars
         ├── home.py           # "Inicio" dashboard
         ├── clients.py        # CRUD on Cliente
@@ -101,7 +102,7 @@ uv run berka
 1. **Staging**: loads `data/berka.sql.gz` into the `berka` database (1-3 min, only the first time).
 2. **Model**: creates `banco_berka` and migrates the data (about 1 min, only if it does not exist yet).
 3. **Routines**: recreates the function, the procedure, the view and both triggers.
-4. **Interface**: serves the app (tabs Inicio, Clientes, Transacciones, Extracto, Saldo, Resumen, Auditoría).
+4. **Interface**: serves the app (tabs Inicio, Clientes, Transacciones, Extracto, Saldo, Vista, Auditoría).
 
 Later runs skip steps 1 and 2, so the changes made from the interface are kept.
 

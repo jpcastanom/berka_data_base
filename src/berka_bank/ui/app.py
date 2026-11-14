@@ -41,7 +41,7 @@ def build(db: Database) -> w.Widget:
             ("Transacciones", transactions.build(db, cat)),
             ("Extracto", routines.statement_panel(db)),
             ("Saldo", routines.balance_panel(db)),
-            ("Resumen", routines.overview_panel(db)),
+            ("Vista", routines.overview_panel(db)),
             ("Auditoría", routines.audit_panel(db)),
         ]
     )
