@@ -32,10 +32,9 @@ body, .jp-Notebook, .jp-OutputArea, .jp-OutputArea-output, #rendered_cells, .jp-
 /* ---------- root + widget variables ---------- */
 .bk-root {
   width: 100%;
-  max-width: 1800px;
   box-sizing: border-box;
   margin: 0 auto;
-  padding: clamp(12px, 2.5vw, 40px) clamp(12px, 2.5vw, 40px) 36px;
+  padding: clamp(12px, 2.5vw, 56px) clamp(12px, 2.5vw, 56px) 36px;
   color: var(--bk-ink);
   font-family: var(--bk-font);
   font-size: 14px;
@@ -254,6 +253,16 @@ body, .jp-Notebook, .jp-OutputArea, .jp-OutputArea-output, #rendered_cells, .jp-
 .bk-steps { margin: 0; padding-left: 18px; color: var(--bk-muted); line-height: 1.8; font-size: 13.5px; }
 .bk-steps b { color: var(--bk-ink); }
 .bk-footer { margin-top: 26px; text-align: center; color: var(--bk-muted); font-size: 12px; }
+
+/* ---------- wide screens (16:9 monitors, ultrawide, second display) ---------- */
+@media (min-width: 1400px) {
+  /* forms: fixed-size fields packed from the left instead of a few giant stretched inputs */
+  .bk-root .bk-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important; }
+  .bk-table-wrap { max-height: clamp(360px, 62vh, 900px); }
+}
+/* 2K / 4K: scale the whole interface so text and controls keep a comfortable size */
+@media (min-width: 2200px) { .bk-root { zoom: 1.2; } }
+@media (min-width: 3000px) { .bk-root { zoom: 1.5; } }
 
 /* ---------- responsive ---------- */
 @media (max-width: 960px) {
