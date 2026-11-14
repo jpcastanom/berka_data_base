@@ -1,12 +1,11 @@
 """Tabs for the stored procedure, the function, the account view and the audit trigger."""
 
 from datetime import date
-from html import escape
 
 import ipywidgets as w
 
 from berka_bank.db import Database, error_text
-from berka_bank.routines import NO_LOAN, VW_ACCOUNT_OVERVIEW, account_overview, account_statement
+from berka_bank.routines import NO_LOAN, account_overview, account_statement
 from berka_bank.ui.widgets import (
     FREQUENCY,
     actions,
@@ -152,15 +151,10 @@ def overview_panel(db: Database):
 
     btn.on_click(run)
     run()  # the view is visible as soon as the tab is built
-    definition = (
-        '<details class="bk-details" open><summary>Definición de la vista (SQL)</summary>'
-        f'<pre class="bk-sql"><code>{escape(VW_ACCOUNT_OVERVIEW.strip())}</code></pre></details>'
-    )
     return section(
         "Vista · vw_resumen_cuenta",
-        "<code>SELECT * FROM vw_resumen_cuenta</code>: una fila por cuenta con sucursal, titular, tarjeta, "
-        "préstamo y saldo actual. Se consulta con los filtros de abajo.",
-        w.HTML(definition),
+        "Consulta la vista <code>vw_resumen_cuenta</code>: una fila por cuenta con sucursal, titular, tarjeta, "
+        "préstamo y saldo actual.",
         grid(account, region, loan, cols=3),
         actions(btn),
         out,
